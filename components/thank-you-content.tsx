@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { CheckCircle2, Phone, Clock, Shield } from "lucide-react"
 import { FooterLinks } from "@/components/polar/footer-links"
 import type { Brand } from "@/lib/brand"
+import { VIDEO_LIBRARY } from "@/lib/thankyou-videos"
+import { VideoLibrary } from "@/components/thank-you-video-library"
 
 // Optional media/book-offer env (per-client, disabled by default).
 const heroVideoUrl = process.env.NEXT_PUBLIC_HERO_VIDEO_URL || ""
@@ -72,6 +74,19 @@ export function ThankYouContent({ brand }: { brand: Brand }) {
           </p>
         </div>
       </div>
+
+      {/* Thank-you video library (606 format) */}
+      {VIDEO_LIBRARY.length > 0 && (
+        <section className="bg-white px-4 py-8 md:py-12">
+          <div className="mx-auto max-w-5xl">
+            <div className="text-center mb-8">
+              <p className="uppercase tracking-widest text-xs font-semibold text-gray-500 mb-1">While You Wait</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Browse Our Video Library</h2>
+            </div>
+            <VideoLibrary categories={VIDEO_LIBRARY} accentColor={brand.accentColor} />
+          </div>
+        </section>
+      )}
 
       {heroVideoUrl && (
         <section className="bg-white px-6 py-6 md:py-12">
