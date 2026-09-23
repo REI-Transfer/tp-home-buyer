@@ -53,3 +53,20 @@ export async function getIPAddress(): Promise<string> {
     return ""
   }
 }
+/** Session id the two-step form stamps on both the early and the complete post,
+ *  so n8n can tie the two submissions to one person. Ported from
+ *  property-buyer-today alongside the two-step form. */
+export function readGfSid(): string {
+  if (typeof window === "undefined") return ""
+  const w = window as unknown as { __gf_sid?: string }
+  if (w.__gf_sid) return w.__gf_sid
+  try {
+    const ls = localStorage.getItem("gf_sid")
+    if (ls) return ls
+  } catch {
+    // localStorage unavailable
+  }
+  const m = document.cookie.match(/(?:^|; )gf_sid=([^;]*)/)
+  if (m) return decodeURIComponent(m[1])
+  return new URLSearchParams(window.location.search).get("sid") || ""
+}

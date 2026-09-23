@@ -39,6 +39,9 @@ const config = {
   disqualifiedPropertyTypes:    process.env.DISQUALIFIED_PROPERTY_TYPES    ?? "mobile-home,land,other",
   disqualifiedOwnershipLengths: process.env.DISQUALIFIED_OWNERSHIP_LENGTHS ?? "",
   allowedStates:   process.env.ALLOWED_STATES   ?? "",
+  // Two-step lead form (per-client switch, default OFF). NEXT_PUBLIC_ so Next
+  // inlines it at BUILD time: change it in Vercel, then redeploy.
+  twoStepForm:     ["1", "true"].includes((process.env.NEXT_PUBLIC_TWO_STEP_FORM ?? "").trim().toLowerCase()),
   webhookUrl:      process.env.WEBHOOK_URL      ?? "",
 } as const
 export default config
