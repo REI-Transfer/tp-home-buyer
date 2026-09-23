@@ -155,7 +155,9 @@ export function HeroSection({ brand }: { brand: Brand }) {
               stretched, or overflowing. Desktop uses the left column. */}
           {hasPhoto && (
             <div className="lg:hidden mt-8 w-full flex flex-col items-center">
-              <div className="relative inline-block overflow-hidden">
+              {/* pt-12 matches the h-12 gradient below, so it lands on empty space
+                  instead of washing out the top of their heads. */}
+              <div className="relative inline-block overflow-hidden pt-12">
                 <img
                   src={brand.foundersPhotoUrl}
                   alt={brand.ownerName ? `${brand.ownerName}, ${brand.companyName}` : brand.companyName}
