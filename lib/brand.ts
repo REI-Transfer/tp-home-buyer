@@ -25,6 +25,7 @@ export interface Brand {
   subheadline: string
   marketName: string
   smsKeyword: string
+  twoStepForm: boolean
   stat1Value: string
   stat1Label: string
   stat2Value: string
@@ -52,6 +53,7 @@ export function buildBrand(): Brand {
     subheadline: config.subheadline,
     marketName: config.marketName,
     smsKeyword: config.smsKeyword,
+    twoStepForm: config.twoStepForm,
     stat1Value: config.stat1Value,
     stat1Label: config.stat1Label,
     stat2Value: config.stat2Value,

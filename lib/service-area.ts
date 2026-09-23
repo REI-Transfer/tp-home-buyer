@@ -69,3 +69,49 @@ export function isWithinServiceArea(
   if (lat === undefined || lng === undefined) return true
   return circles.some((c) => haversineMiles(lat, lng, c.lat, c.lng) <= c.radiusMiles)
 }
+
+/**
+ * Optional county gate. NEXT_PUBLIC_ALLOWED_COUNTIES lists "ST:County" pairs,
+ * comma-separated, e.g. "CA:Los Angeles,CA:Orange,CA:Riverside".
+ * "CA:*" accepts the whole state.
+ * Use it when the ads target whole counties, so the form accepts exactly what
+ * the ads pay to reach (the mirror rule). When set, it replaces the circles.
+ */
+function normCounty(s: string): string {
+  return s.toLowerCase().replace(/\b(county|parish|borough)\b/g, "").replace(/\s+/g, " ").trim()
+}
+
+export function parseAllowedCounties(raw?: string): { state: string; county: string }[] {
+  const src = raw ?? process.env.NEXT_PUBLIC_ALLOWED_COUNTIES ?? ""
+  return src
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      const i = p.indexOf(":")
+      return i > 0
+        ? { state: p.slice(0, i).trim().toUpperCase(), county: normCounty(p.slice(i + 1)) }
+        : { state: "", county: normCounty(p) }
+    })
+    .filter((c) => c.county)
+}
+
+/**
+ * The gate every form door should call. Counties win when configured;
+ * otherwise falls back to the circle gate. An address whose county Google
+ * did not return is accepted (we never block a lead we can't place).
+ */
+export function isAddressInServiceArea(details: {
+  lat?: number
+  lng?: number
+  state?: string
+  county?: string
+}): boolean {
+  const counties = parseAllowedCounties()
+  if (counties.length === 0) return isWithinServiceArea(details.lat, details.lng)
+  const st = (details.state || "").toUpperCase()
+  if (counties.some((c) => c.county === "*" && c.state === st)) return true
+  if (!details.county) return !!st && counties.some((c) => c.state === st)
+  const co = normCounty(details.county)
+  return counties.some((c) => c.county === co && (!c.state || c.state === st))
+}
