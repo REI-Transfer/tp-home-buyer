@@ -22,7 +22,7 @@ import { Home, ArrowRight, ArrowLeft, ArrowDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { captureTrackingData, getIPAddress, readGfSid } from "@/lib/tracking"
 import { Input } from "@/components/ui/input"
-import { AddressAutocomplete, type AddressDetails } from "@/components/survey/address-autocomplete"
+import { AddressAutocomplete, type AddressAutocompleteHandle, type AddressDetails } from "@/components/survey/address-autocomplete"
 import { isAddressInServiceArea } from "@/lib/service-area"
 import type { SurveyCardProps } from "@/components/v2/survey-card"
 import {
@@ -96,6 +96,7 @@ export function TwoStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
   const [isDisqualified, setIsDisqualified] = useState(false)
   const [disqualifyReason, setDisqualifyReason] = useState("")
   const [addressVerified, setAddressVerified] = useState(!!initialAddress)
+  const addressRef = useRef<AddressAutocompleteHandle>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({})
   const formStartTime = useRef<number>(Date.now())
@@ -140,6 +141,7 @@ export function TwoStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
 
   const handleAddressContinue = () => {
     if (surveyData.address.trim().length > 0 && addressVerified) setStage1Step(2)
+    else void addressRef.current?.resolveTypedAddress()
   }
 
   const handleOwnerSelect = (value: string) => {
@@ -467,6 +469,7 @@ export function TwoStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
                 <ArrowDown className="h-6 w-6 text-[#1B2A4A] animate-bounce" />
               </div>
               <AddressAutocomplete
+                ref={addressRef}
                 value={surveyData.address}
                 onChange={(address) => { setSurveyData({ ...surveyData, address }); setAddressVerified(false) }}
                 onSelect={handleAddressSelect}
@@ -474,7 +477,7 @@ export function TwoStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
               />
               <Button
                 onClick={handleAddressContinue}
-                disabled={!(surveyData.address.trim().length > 0 && addressVerified)}
+                disabled={!surveyData.address.trim()}
                 className="w-full h-14 bg-[#1B2A4A] text-white text-lg font-semibold rounded-xl hover:bg-[#131E36] disabled:opacity-40 transition-all shadow-md hover:shadow-lg"
               >
                 Get My Cash Offer

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Phone, MapPin, ArrowRight } from "lucide-react";
-import { AddressAutocomplete, type AddressDetails } from "@/components/survey/address-autocomplete";
+import { AddressAutocomplete, type AddressAutocompleteHandle, type AddressDetails } from "@/components/survey/address-autocomplete";
 import { SurveyCard } from "@/components/v2/survey-card";
 import type { Brand } from "@/lib/brand";
 
@@ -13,6 +13,7 @@ export function Header({ brand }: { brand: Brand }) {
   const [pastHero, setPastHero] = useState(false);
   const [address, setAddress] = useState("");
   const [showSurvey, setShowSurvey] = useState(false);
+  const addressRef = useRef<AddressAutocompleteHandle>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,6 +56,7 @@ export function Header({ brand }: { brand: Brand }) {
               <div className="relative w-full flex items-center gap-2">
                 <div className="relative flex-1">
                   <AddressAutocomplete
+                    ref={addressRef}
                     value={address}
                     onChange={setAddress}
                     onSelect={handleAddressSelect}
@@ -63,7 +65,7 @@ export function Header({ brand }: { brand: Brand }) {
                   />
                 </div>
                 <button
-                  onClick={() => { if (address.trim()) setShowSurvey(true); }}
+                  onClick={() => { void addressRef.current?.resolveTypedAddress(); }}
                   className="shrink-0 h-9 px-4 bg-[#1B2A4A] hover:bg-[#131E36] text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
                 >
                   Go
