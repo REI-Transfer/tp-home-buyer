@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowRight, ArrowDown, Shield, Clock, DollarSign } from "lucide-react";
 import { SurveyCard } from "@/components/v2/survey-card";
-import { AddressAutocomplete, type AddressDetails } from "@/components/survey/address-autocomplete";
+import { AddressAutocomplete, type AddressAutocompleteHandle, type AddressDetails } from "@/components/survey/address-autocomplete";
 import { isAddressInServiceArea } from "@/lib/service-area";
 import { marketPhrase, type Brand } from "@/lib/brand";
 
@@ -12,6 +12,7 @@ export function HeroSection({ brand }: { brand: Brand }) {
   const [initialAddress, setInitialAddress] = useState("");
   const [addressVerified, setAddressVerified] = useState(false);
   const [outsideAreaError, setOutsideAreaError] = useState(false);
+  const addressRef = useRef<AddressAutocompleteHandle>(null);
 
   const hasPhoto = !!brand.foundersPhotoUrl;
 
@@ -92,6 +93,7 @@ export function HeroSection({ brand }: { brand: Brand }) {
                 </div>
                 <div className="relative">
                   <AddressAutocomplete
+                    ref={addressRef}
                     value={initialAddress}
                     onChange={(address) => { setInitialAddress(address); setAddressVerified(false); setOutsideAreaError(false); }}
                     onSelect={handleAddressSelect}
@@ -100,7 +102,7 @@ export function HeroSection({ brand }: { brand: Brand }) {
                   />
                 </div>
                 <button
-                  onClick={() => { if (addressVerified) setShowSurvey(true) }}
+                  onClick={() => { if (addressVerified) setShowSurvey(true); else void addressRef.current?.resolveTypedAddress(); }}
                   className="w-full h-14 bg-[#1B2A4A] hover:bg-[#131E36] text-white font-semibold text-xl rounded-2xl transition-all shadow-lg shadow-[#1B2A4A]/20 flex items-center justify-center gap-2"
                 >
                   Get My Free Cash Offer
