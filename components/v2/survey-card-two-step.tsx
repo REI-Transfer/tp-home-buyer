@@ -31,7 +31,6 @@ import {
   LEGAL_OWNER_OPTIONS,
   OWNERSHIP_LENGTH_OPTIONS,
   LISTED_OPTIONS,
-  TIMELINE_OPTIONS,
   CONDITION_OPTIONS,
   REASON_OPTIONS,
   calculateLeadScore,
@@ -47,9 +46,9 @@ import {
 } from "@/components/v2/survey-card-shared"
 
 const STAGE1_STEPS = 4 // 1=address, 2=owner, 3=listed, 4=contact
-type Stage2Field = "propertyType" | "ownershipLength" | "timeline" | "condition" | "reason"
+type Stage2Field = "propertyType" | "ownershipLength" | "condition" | "reason"
 // The one-step form's question order, minus the questions that moved to Stage 1.
-const STAGE2_FIELDS: Stage2Field[] = ["propertyType", "ownershipLength", "timeline", "condition", "reason"]
+const STAGE2_FIELDS: Stage2Field[] = ["propertyType", "ownershipLength", "condition", "reason"]
 
 // Hard disqualifiers: the same values the one-step form blocks on.
 // Condo is a DQ (townhouse still qualifies).
@@ -665,12 +664,6 @@ export function TwoStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
           "When did you purchase the home?",
           "This helps us estimate your equity position.",
           OWNERSHIP_LENGTH_OPTIONS.map((o) => renderOptionButton(o, surveyData.ownershipLength, () => handleStage2OptionSelect("ownershipLength", o.id)))
-        )}
-
-        {currentField === "timeline" && renderQuestion(
-          "How fast are you looking to sell?",
-          "Select your ideal timeline for closing.",
-          TIMELINE_OPTIONS.map((o) => renderOptionButton(o, surveyData.timeline, () => handleStage2OptionSelect("timeline", o.id)))
         )}
 
         {currentField === "condition" && renderQuestion(
