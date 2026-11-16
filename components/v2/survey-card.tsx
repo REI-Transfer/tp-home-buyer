@@ -14,7 +14,6 @@ import {
   LEGAL_OWNER_OPTIONS,
   OWNERSHIP_LENGTH_OPTIONS,
   LISTED_OPTIONS,
-  TIMELINE_OPTIONS,
   CONDITION_OPTIONS,
   REASON_OPTIONS,
   calculateLeadScore,
@@ -43,7 +42,7 @@ export function SurveyCard(props: SurveyCardProps) {
   return props.brand.twoStepForm ? <TwoStepSurveyCard {...props} /> : <OneStepSurveyCard {...props} />
 }
 
-// The original one-step form (9 screens, one submit). Logic untouched.
+// The original one-step form (8 screens, one submit). Logic untouched.
 function OneStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
   const [step, setStep] = useState(initialAddress ? 2 : 1)
   const [surveyData, setSurveyData] = useState<SurveyData>({
@@ -78,10 +77,10 @@ function OneStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
   }, [])
   const [honeypot, setHoneypot] = useState("")
 
-  const totalSteps = 9
+  const totalSteps = 8
 
   const handleNext = async () => {
-    if (step === 9) {
+    if (step === 8) {
       const errors: {[key: string]: string} = {}
       const firstNameCheck = validateName(surveyData.firstName)
       if (!firstNameCheck.valid) errors.firstName = firstNameCheck.msg
@@ -194,10 +193,9 @@ function OneStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
       case 3: return surveyData.isLegalOwner !== ""
       case 4: return surveyData.ownershipLength !== ""
       case 5: return surveyData.listedOnMarket !== ""
-      case 6: return surveyData.timeline !== ""
-      case 7: return surveyData.condition !== ""
-      case 8: return surveyData.reason !== ""
-      case 9: return surveyData.firstName.trim().length > 0 && surveyData.lastName.trim().length > 0 && surveyData.email.trim().length > 0 && surveyData.phone.trim().length > 0
+      case 6: return surveyData.condition !== ""
+      case 7: return surveyData.reason !== ""
+      case 8: return surveyData.firstName.trim().length > 0 && surveyData.lastName.trim().length > 0 && surveyData.email.trim().length > 0 && surveyData.phone.trim().length > 0
       default: return false
     }
   }
@@ -386,21 +384,8 @@ function OneStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
           </div>
         )}
 
-        {/* Step 6: Timeline */}
+        {/* Step 6: Condition */}
         {step === 6 && (
-          <div className="flex flex-col gap-4">
-            <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-[#0F1D2F]">How fast are you looking to sell?</h2>
-              <p className="mt-1 text-base text-[#5A6B7D]">Select your ideal timeline for closing.</p>
-            </div>
-            <div className="flex flex-col gap-2">
-              {TIMELINE_OPTIONS.map((option) => renderOptionButton(option, surveyData.timeline, "timeline"))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 7: Condition */}
-        {step === 7 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-xl md:text-2xl font-semibold text-[#0F1D2F]">What condition is the property in?</h2>
@@ -412,8 +397,8 @@ function OneStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
           </div>
         )}
 
-        {/* Step 8: Reason */}
-        {step === 8 && (
+        {/* Step 7: Reason */}
+        {step === 7 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-xl md:text-2xl font-semibold text-[#0F1D2F]">What&apos;s your reason for selling?</h2>
@@ -425,8 +410,8 @@ function OneStepSurveyCard({ initialAddress, brand }: SurveyCardProps) {
           </div>
         )}
 
-        {/* Step 9: Contact Information */}
-        {step === 9 && (
+        {/* Step 8: Contact Information */}
+        {step === 8 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-xl md:text-2xl font-semibold text-[#0F1D2F]">Almost done. How can we reach you?</h2>

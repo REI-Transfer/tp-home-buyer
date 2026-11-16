@@ -87,6 +87,8 @@ export const REASON_OPTIONS = [
 export const SCORE_TIMELINE: Record<string, number> = {
   'asap': 3, '2-weeks': 2, '30-days': 1, '60-days': 0, 'flexible': 0,
 }
+// The timeline question is no longer asked; an empty timeline scores as "30-days".
+const TIMELINE_NEUTRAL = 1
 export const SCORE_OWNERSHIP: Record<string, number> = {
   '10-plus-years': 3, '5-10-years': 1, '3-5-years': 0, '1-3-years': 0,
   // inherited: exempt from the ownership hard-DQ; scored 3 (matches Elevate v2.51).
@@ -103,7 +105,7 @@ export const SCORE_CONDITION: Record<string, number> = {
   'fair': 0, 'good': 0, 'excellent': 0,
 }
 export function calculateLeadScore(d: SurveyData): number {
-  const t = SCORE_TIMELINE[d.timeline] ?? 0
+  const t = d.timeline ? (SCORE_TIMELINE[d.timeline] ?? 0) : TIMELINE_NEUTRAL
   const o = SCORE_OWNERSHIP[d.ownershipLength] ?? 0
   const r = SCORE_REASON[d.reason] ?? 0
   const c = SCORE_CONDITION[d.condition] ?? 0
