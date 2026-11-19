@@ -4,7 +4,7 @@
 // (survey-card-two-step.tsx): answer options, lead scoring, validation and the
 // two end screens. Moved here verbatim from survey-card.tsx so both forms score,
 // qualify and validate from ONE copy of the rules.
-import { Check, XCircle } from "lucide-react"
+import { Check, XCircle, MessageSquare, Phone } from "lucide-react"
 import { marketPhrase, type Brand } from "@/lib/brand"
 
 export interface SurveyData {
@@ -13,6 +13,9 @@ export interface SurveyData {
   state: string
   zip: string
   propertyType: string
+  landOwned?: string // two-step form only
+  priority?: string // two-step form only
+  reasonDetails?: string // two-step form only: optional "anything else?" text
   isLegalOwner: string
   ownershipLength: string
   listedOnMarket: string
@@ -33,6 +36,14 @@ export const PROPERTY_TYPE_OPTIONS = [
   { id: "mobile-home", label: "Mobile / Manufactured Home" },
   { id: "land", label: "Vacant Land / Lot" },
   { id: "other", label: "Other" },
+]
+
+// Asked only after "Mobile / Manufactured Home" (William 2026-11-16): a mobile home on land
+// the seller owns is a buyable deal; one in a park or on a rented lot is not.
+export const LAND_OWNED_OPTIONS = [
+  { id: "yes", label: "Yes, I own the land" },
+  { id: "no", label: "No, I rent the lot or pay lot rent" },
+  { id: "not-sure", label: "Not sure" },
 ]
 
 export const LEGAL_OWNER_OPTIONS = [
@@ -72,6 +83,22 @@ export const CONDITION_OPTIONS = [
   { id: "distressed", label: "Distressed - Significant issues", desc: "Not livable as-is. Significant damage, or it's been sitting vacant." },
 ]
 
+// Equity-checked two-step form: condition as 4 photo cards, asked before contact.
+// Stored values stay excellent/good/fair/poor so CRMs and scoring keep working.
+export const CONDITION_PHOTO_OPTIONS = [
+  { id: "excellent", label: "Excellent", desc: "Remodeled, like new. Ready to move in.", img: "/images/condition/level-1.jpg", alt: "Remodeled white kitchen" },
+  { id: "good", label: "Good", desc: "Clean but dated. Everything works, but the look is 10 to 20 years old.", img: "/images/condition/level-2.jpg", alt: "Clean kitchen with older wood cabinets" },
+  { id: "fair", label: "Fair", desc: "Original and tired. Needs updating throughout.", img: "/images/condition/level-3.jpg", alt: "Worn original kitchen with old wallpaper" },
+  { id: "poor", label: "Poor", desc: "Needs major repairs. Roof, foundation, water damage, or rooms torn out.", img: "/images/condition/level-4.jpg", alt: "Kitchen with a collapsed ceiling and debris" },
+]
+
+// "What matters most to you?" Tag only: nobody is screened out on this answer.
+export const PRIORITY_OPTIONS = [
+  { id: "fast-as-is", label: "A fast, simple sale. As-is, no repairs, no fees." },
+  { id: "highest-price", label: "Getting the highest price, even if it takes longer and needs repairs." },
+  { id: "not-sure", label: "Not sure yet" },
+]
+
 export const REASON_OPTIONS = [
   { id: "foreclosure", label: "Facing foreclosure" },
   { id: "behind-payments", label: "Behind on payments" },
@@ -83,47 +110,22 @@ export const REASON_OPTIONS = [
   { id: "other", label: "Other" },
 ]
 
-// ─── Lead scoring (browser-side, no n8n changes) ───────────────────────
-export const SCORE_TIMELINE: Record<string, number> = {
-  'asap': 3, '2-weeks': 2, '30-days': 1, '60-days': 0, 'flexible': 0,
-}
-// The timeline question is no longer asked; an empty timeline scores as "30-days".
-const TIMELINE_NEUTRAL = 1
-export const SCORE_OWNERSHIP: Record<string, number> = {
-  '10-plus-years': 3, '5-10-years': 1, '3-5-years': 0, '1-3-years': 0,
-  // inherited: exempt from the ownership hard-DQ; scored 3 (matches Elevate v2.51).
-  'inherited': 3,
-}
-export const SCORE_REASON: Record<string, number> = {
-  'foreclosure': 3, 'behind-payments': 3,
-  'inherited': 2, 'repairs': 2,
-  'other': 1,
-  'relocation': 0, 'divorce': 0, 'downsizing': 0,
-}
-export const SCORE_CONDITION: Record<string, number> = {
-  'poor': 1, 'distressed': 1,
-  'fair': 0, 'good': 0, 'excellent': 0,
-}
-export function calculateLeadScore(d: SurveyData): number {
-  const t = d.timeline ? (SCORE_TIMELINE[d.timeline] ?? 0) : TIMELINE_NEUTRAL
-  const o = SCORE_OWNERSHIP[d.ownershipLength] ?? 0
-  const r = SCORE_REASON[d.reason] ?? 0
-  const c = SCORE_CONDITION[d.condition] ?? 0
-  return Math.min(10, t + o + r + c)
-}
+// ─── Lead scoring: lib/lead-score.ts (shared with the submit route, which re-scores
+// the two-step form after filling answers from the property record) ───────────
+export { SCORE_TIMELINE, SCORE_OWNERSHIP, SCORE_REASON, SCORE_CONDITION } from "@/lib/lead-score"
+import { calculateLeadScore as scoreAnswers, leadQuality as qualityFor } from "@/lib/lead-score"
+export function calculateLeadScore(d: SurveyData): number { return scoreAnswers(d) }
 export function isQualifiedForMeta(d: SurveyData): boolean {
   const okType = d.propertyType === 'single-family' || d.propertyType === 'multi-family'
+    || (d.propertyType === 'mobile-home' && d.landOwned === 'yes')
   const okListed = d.listedOnMarket === 'not-listed'
   const okOwner = d.isLegalOwner !== 'no'
   return okType && okListed && okOwner
 }
-export function leadQuality(score: number): 'premium' | 'standard' | 'low' {
-  if (score >= 6) return 'premium'
-  if (score >= 2) return 'standard'
-  return 'low'
-}
+export function leadQuality(score: number): 'premium' | 'standard' | 'low' { return qualityFor(score) }
 export function disqualifyReasonFor(d: SurveyData): string {
-  if (d.propertyType !== 'single-family' && d.propertyType !== 'multi-family') return 'property_type'
+  if (d.propertyType === 'mobile-home' && d.landOwned !== 'yes') return 'land_not_confirmed'
+  if (d.propertyType !== 'single-family' && d.propertyType !== 'multi-family' && d.propertyType !== 'mobile-home') return 'property_type'
   if (d.listedOnMarket !== 'not-listed') return 'listed'
   if (d.isLegalOwner === 'no') return 'not_owner'
   if (d.condition === 'excellent') return 'excellent_condition'
@@ -241,6 +243,43 @@ export function DisqualifiedScreen({ reason: disqualifyReason, brand }: { reason
           className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#1B2A4A] px-8 py-4 text-lg text-white hover:bg-[#131E36] transition-colors"
         >
           Call Us: {brand.phoneDisplay}
+        </a>
+      </div>
+    </div>
+  )
+}
+
+// Equity-checked two-step form: ONE screen-out for every "not a fit" reason
+// (low equity, listed, property type, rented lot, excellent condition, and the
+// fallback questions). Never mentions equity, loans or public records.
+// Text Us opens the seller's text app with the message pre-filled; numbers that
+// can't take texts (PHONE_ACCEPTS_TEXT=0) get Call Us instead.
+export function ScreenOutScreen({ brand, address }: { brand: Brand; address: string }) {
+  const digits = (brand.phoneHref || "").replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "")
+  const e164 = `+1${digits}`
+  const body = `Hi, I filled out the form on your website and it said I might not be a fit, but I'm still interested in getting an offer on my house at ${address || "my property"}.`
+  const href = brand.phoneAcceptsText ? `sms:${e164}?&body=${encodeURIComponent(body)}` : `tel:${e164}`
+  return (
+    <div className="w-full max-w-2xl rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-lg">
+      <div className="flex flex-col items-center gap-5 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+          <XCircle className="h-8 w-8 text-red-500" />
+        </div>
+        <div>
+          <h2 className="text-xl md:text-2xl font-semibold text-[#0F1D2F]">We May Not Be the Best Fit</h2>
+          <p className="mt-2 text-[#5A6B7D] text-lg">
+            Based on the details of your property, a cash sale may not get you the result you&apos;re looking for. We&apos;d rather tell you that now than waste your time.
+          </p>
+          <p className="mt-4 text-base text-[#5A6B7D]">
+            If you think we got this wrong, {brand.phoneAcceptsText ? "text" : "call"} us using the button below and we&apos;ll take a look.
+          </p>
+        </div>
+        <a
+          href={href}
+          className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#1B2A4A] px-8 py-4 text-lg text-white hover:bg-[#131E36] transition-colors"
+        >
+          {brand.phoneAcceptsText ? <MessageSquare className="h-5 w-5" /> : <Phone className="h-5 w-5" />}
+          {brand.phoneAcceptsText ? "Text Us" : "Call Us"} · {brand.phoneDisplay}
         </a>
       </div>
     </div>

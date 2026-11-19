@@ -26,6 +26,12 @@ export interface Brand {
   marketName: string
   smsKeyword: string
   twoStepForm: boolean
+  /** Property-record form switch (NEXT_PUBLIC_RECORD_FORM; always on in the showroom). */
+  recordForm: boolean
+  /** Demo site: the form sends nothing anywhere. */
+  showroom: boolean
+  /** Screen-out button texts the client (false = calls). PHONE_ACCEPTS_TEXT. */
+  phoneAcceptsText: boolean
   stat1Value: string
   stat1Label: string
   stat2Value: string
@@ -54,6 +60,9 @@ export function buildBrand(): Brand {
     marketName: config.marketName,
     smsKeyword: config.smsKeyword,
     twoStepForm: config.twoStepForm,
+    recordForm: config.recordForm,
+    showroom: config.showroom,
+    phoneAcceptsText: config.phoneAcceptsText,
     stat1Value: config.stat1Value,
     stat1Label: config.stat1Label,
     stat2Value: config.stat2Value,

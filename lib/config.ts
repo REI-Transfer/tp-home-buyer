@@ -9,6 +9,8 @@ const config = {
   companyName:     process.env.COMPANY_NAME     ?? "Your Home Buyers",
   phoneDisplay:    process.env.PHONE_DISPLAY    ?? "(800) 000-0000",
   phoneHref:       process.env.PHONE_HREF       ?? "8000000000",
+  // Screen-out button: "Text Us" (pre-filled SMS) unless the number can't take texts (PHONE_ACCEPTS_TEXT=0 -> "Call Us").
+  phoneAcceptsText: !["0", "false", "off"].includes((process.env.PHONE_ACCEPTS_TEXT ?? "").trim().toLowerCase()),
   callinDisplay:   process.env.NEXT_PUBLIC_CALLIN_DISPLAY ?? "",
   callinHref:      process.env.NEXT_PUBLIC_CALLIN_HREF    ?? "",
   // Accent: onboarding sends BRAND_ACCENT; ACCENT_COLOR is an override. Prefer ACCENT_COLOR, else BRAND_ACCENT, else default.
@@ -43,6 +45,10 @@ const config = {
   // inlines it at BUILD time: change it in Vercel, then redeploy.
   twoStepForm:     ["1", "true"].includes((process.env.NEXT_PUBLIC_TWO_STEP_FORM ?? "").trim().toLowerCase()),
   webhookUrl:      process.env.WEBHOOK_URL      ?? "",
+  // Demo site switch (template): never set on a client site.
+  showroom:        process.env.SHOWROOM === "1",
+  // Property-record form (components/v2/record-survey-card.tsx). Off unless set; always on in the showroom.
+  recordForm:      ["1", "true", "on"].includes((process.env.NEXT_PUBLIC_RECORD_FORM ?? "").trim().toLowerCase()) || process.env.SHOWROOM === "1",
 } as const
 export default config
 export type Config = typeof config

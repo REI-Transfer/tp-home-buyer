@@ -28,6 +28,7 @@ import {
   SubmittedScreen,
 } from "@/components/v2/survey-card-shared"
 import { TwoStepSurveyCard } from "@/components/v2/survey-card-two-step"
+import { RecordSurveyCard } from "@/components/v2/record-survey-card"
 
 export interface SurveyCardProps {
   initialAddress?: string
@@ -38,7 +39,15 @@ export interface SurveyCardProps {
 // lib/config -> brand.twoStepForm). OFF by default: every client without the
 // switch gets the one-step form below, unchanged. ON: the two-step form in
 // survey-card-two-step.tsx (early lead on contact details, full lead on finish).
+// Set the switch to 0/false/off for the one-step form below.
+// NEXT_PUBLIC_RECORD_FORM=1 (always on in the showroom): the property-record form in
+// components/v2/record-survey-card.tsx, in the same one-step / two-step version.
+// Off = the forms below, untouched (the migration switch: unset it and redeploy to roll back).
 export function SurveyCard(props: SurveyCardProps) {
+  // Showroom only: ?form=one-step or ?form=two-step shows that version, to try both.
+  const forced = props.brand.showroom && typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("form") : null
+  const twoStep = forced === "one-step" ? false : forced === "two-step" ? true : props.brand.twoStepForm
+  if (props.brand.recordForm) return <RecordSurveyCard {...props} mode={twoStep ? "two-step" : "one-step"} />
   return props.brand.twoStepForm ? <TwoStepSurveyCard {...props} /> : <OneStepSurveyCard {...props} />
 }
 
